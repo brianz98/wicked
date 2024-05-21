@@ -130,7 +130,7 @@ def compute_inverse_denominators(H: dict, nocc: list[int], nvir: list[int], rank
         )
     return D
 
-def get_index_blocks(func):
+def get_index_blocks(func, blocks=None):
     """
     A function to gather the necessary blocks of the Hamiltonian for the CC equations
 
@@ -139,7 +139,7 @@ def get_index_blocks(func):
     funt : str
         The function(s) to parse.
     """
-    blocks = set()
+    blocks = set() if blocks is None else blocks
     for line in func.split("\n"):
         if "np.einsum" in line and "H[" in line: # is a contraction containing H
             blocks.add(line.split("H[\"")[1].split("\"]")[0])
