@@ -22,6 +22,31 @@ def generate_equation(mbeq, nocc, nvir):
     funct = "\n".join(code)
     return funct
 
+def generate_tensor_block(eqs, block):
+    block = ''.join(block.split('|')) if len(block)==3 else block[:2]+block[3:][::-1]
+
+    res_sym = f"R{block}"
+    code = [
+        f"def evaluate_residual_{block}(H,T):",
+        "    # contributions to the residual",
+    ]
+
+    size_dict = {'o': 'nocc', 'v': 'nvir'}
+    tensor_allocation = 'np.zeros(('
+    for i in block:
+        tensor_allocation += f'{size_dict[i]},'
+    tensor_allocation = tensor_allocation[:-1]
+    tensor_allocation += '))'
+    code.append(f"    {res_sym} = {tensor_allocation}")
+
+    for eq in eqs:
+        contraction = eq.compile("einsum")
+        code.append(f"    {contraction}")
+
+    code.append(f"    return {res_sym}")
+    funct = "\n".join(code)
+    return funct
+
 
 def update_cc_amplitudes(T, R, invD, rank: int):
     """
@@ -53,6 +78,26 @@ def antisymmetrize_residual_2_2(Roovv, nocc, nvir):
     Roovv_anti -= np.einsum("ijab->jiab", Roovv)
     Roovv_anti -= np.einsum("ijab->ijba", Roovv)
     Roovv_anti += np.einsum("ijab->jiba", Roovv)
+    return Roovv_anti
+
+def antisymmetrize_residual_2_2_general(Roovv, nocc, nvir, nup, ndown):
+    # antisymmetrize the residual
+    Roovv_anti = np.zeros_like(Roovv)
+    if (nup == 2 and ndown == 2):
+        Roovv_anti += np.einsum("ijab->ijab", Roovv)
+        Roovv_anti -= np.einsum("ijab->jiab", Roovv)
+        Roovv_anti -= np.einsum("ijab->ijba", Roovv)
+        Roovv_anti += np.einsum("ijab->jiba", Roovv)
+    elif (nup == 1 and ndown == 1):
+        Roovv_anti = Roovv
+    elif (nup == 2 and ndown == 1):
+        Roovv_anti += np.einsum("ijab->ijab", Roovv)
+        Roovv_anti -= np.einsum("ijab->jiab", Roovv)
+    elif (nup == 1 and ndown == 2):
+        Roovv_anti += np.einsum("ijab->ijab", Roovv)
+        Roovv_anti -= np.einsum("ijab->ijba", Roovv)
+    else:
+        raise ValueError("Unsupported number of up and down equivalent electrons")
     return Roovv_anti
 
 
