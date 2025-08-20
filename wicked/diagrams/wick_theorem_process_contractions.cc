@@ -548,7 +548,7 @@ WickTheorem::combinatorial_factor(const OperatorProduct &ops,
     contraction_count[contraction] += 1;
   }
   for (const auto &kv : contraction_count) {
-    factor /= binomial(kv.second, 1);
+    factor /= factorial(kv.second);
   }
   return factor;
 }
