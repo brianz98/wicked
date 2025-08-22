@@ -88,8 +88,28 @@ def test_odd_operators_4():
     assert val == val2
 
 
+def test_odd_operators_5():
+    initialize()
+    A = w.op("a", ["o+ o+ o+"])
+    B = w.op("b", ["o o o"])
+
+    wt = w.WickTheorem()
+    val = wt.contract(A @ B, 0, 0)
+    val2 = w.expression("1/6 a^{}_{o0,o1,o2} b^{o0,o1,o2}_{}")
+    print_comparison(val, val2)
+    assert val == val2
+
+    A = w.op("b", ["o+ o+ o+ v v v"])
+    B = w.op("a", ["v+ v+ v+ o o o"])
+    val = wt.contract(A @ B, 0, 0)
+    val2 = w.expression("1/36 a^{o0,o1,o2}_{v0,v1,v2} b^{v0,v1,v2}_{o0,o1,o2}")
+    print_comparison(val, val2)
+    assert val == val2
+
+
 if __name__ == "__main__":
     test_odd_operators_1()
     test_odd_operators_2()
     test_odd_operators_3()
     test_odd_operators_4()
+    test_odd_operators_5()
